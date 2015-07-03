@@ -4,7 +4,7 @@ import Measurements
 import numpy as np
 from math import sqrt
 
-animation = False
+animation = True
 
 
 N =  35
