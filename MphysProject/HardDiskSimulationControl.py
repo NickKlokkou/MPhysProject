@@ -4,7 +4,10 @@ import Measurements
 import numpy as np
 from math import sqrt
 
-animation = True
+animation = False
+positionSample = True
+velocitySample = True
+radialDistributionSample = True
 
 
 N =  35
@@ -38,6 +41,8 @@ grey = (100, 100, 100)
 
 positionMeasurements = Measurements.Measure(1.0)
 velocityMeasurements = Measurements.Measure(50.0)
+diskDiskDistanceMeasurements = Measurements.Measure(1.0)
+
 
 for i in range(N):
     
@@ -110,24 +115,35 @@ while done == False:
                         diskCollisionTimes[nextPair] = float('inf')
     
    
-    for i in range(N):
-        velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
+    if velocitySample:
+        for i in range(N):
+            velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
     for t in range(int(deltaT)):     
         for i in range(N):
             
             pos = disk[i].pygame_propagate(t, wallLength)
             if (T+t)%1 == 0:
-                positionMeasurements.sample(pos[0])
+                if positionSample:
+                    positionMeasurements.sample(pos[0])
+            
+                if radialDistributionSample:    
+                    for j in range(N):
+                        distance = np.linalg.norm(disk[i].position - disk[j].position)
+                        diskDiskDistanceMeasurements.sample(distance)
                 
             if animation: pygame.draw.circle(screen, black, pos.astype(int), int(radius), 0)
       
         animate()
 pygame.quit
 
-positionMeasurements.normalise()
-positionMeasurements.plot_results()
-velocityMeasurements.normalise()
-velocityMeasurements.plot_results()
+if positionSample: 
+    positionMeasurements.normalise()
+    positionMeasurements.plot_results()
+if velocityMeasurements:
+    velocityMeasurements.normalise()
+    velocityMeasurements.plot_results()
+if radialDistributionSample:
+    diskDiskDistanceMeasurements.plot_results()
 
  
 
