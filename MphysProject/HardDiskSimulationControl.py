@@ -1,6 +1,7 @@
 import HardDisk
 import pygame
 import Measurements
+import AutoCorrelationFunction
 import numpy as np
 from math import sqrt
 
@@ -10,8 +11,8 @@ velocitySample = True
 radialDistributionSample = True
 
 
-N =  35
-radius = 5
+N =  10
+radius = 30
 wallLength = 500.0
 
 
@@ -41,7 +42,7 @@ grey = (100, 100, 100)
 
 positionMeasurements = Measurements.Measure(1.0)
 velocityMeasurements = Measurements.Measure(50.0)
-diskDiskDistanceMeasurements = Measurements.Measure(1.0)
+diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation(1.0)
 
 
 for i in range(N):
@@ -122,14 +123,13 @@ while done == False:
         for i in range(N):
             
             pos = disk[i].pygame_propagate(t, wallLength)
-            if (T+t)%1 == 0:
+            if (T+t)%30 == 0:
                 if positionSample:
                     positionMeasurements.sample(pos[0])
+                
+                if radialDistributionSample:
+                    diskDiskDistanceMeasurements.auto_correlation_function(disk)
             
-                if radialDistributionSample:    
-                    for j in range(N):
-                        distance = np.linalg.norm(disk[i].position - disk[j].position)
-                        diskDiskDistanceMeasurements.sample(distance)
                 
             if animation: pygame.draw.circle(screen, black, pos.astype(int), int(radius), 0)
       
@@ -143,6 +143,7 @@ if velocityMeasurements:
     velocityMeasurements.normalise()
     velocityMeasurements.plot_results()
 if radialDistributionSample:
+    diskDiskDistanceMeasurements.normalise()
     diskDiskDistanceMeasurements.plot_results()
 
  

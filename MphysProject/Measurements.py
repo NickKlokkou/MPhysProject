@@ -35,3 +35,5 @@ class Measure(object):
         pylab.plot(self.bins)
         pylab.show()
         
+        
+    
