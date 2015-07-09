@@ -11,8 +11,8 @@ velocitySample = True
 radialDistributionSample = True
 
 
-N =  10
-radius = 30
+N =  5
+radius = 50
 wallLength = 500.0
 
 
@@ -123,7 +123,7 @@ while done == False:
         for i in range(N):
             
             pos = disk[i].pygame_propagate(t, wallLength)
-            if (T+t)%30 == 0:
+            if (T+t)%33 == 0 and T > 5000:  #
                 if positionSample:
                     positionMeasurements.sample(pos[0])
                 
