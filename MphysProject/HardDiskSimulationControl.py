@@ -6,13 +6,13 @@ import numpy as np
 from math import sqrt
 
 animation = False
-positionSample = True
-velocitySample = True
+positionSample = False
+velocitySample = False
 radialDistributionSample = True
 
 
-N =  10
-radius = 30
+N =  50
+radius = 10
 wallLength = 500.0
 
 
@@ -42,7 +42,7 @@ grey = (100, 100, 100)
 
 positionMeasurements = Measurements.Measure(1.0)
 velocityMeasurements = Measurements.Measure(50.0)
-diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation(1.0)
+diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation()
 
 
 for i in range(N):
@@ -119,17 +119,18 @@ while done == False:
     if velocitySample:
         for i in range(N):
             velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
-    for t in range(int(deltaT)):     
+    for t in range(int(deltaT)):   
+        if radialDistributionSample and (T+t)%33 == 0 and T > 300:
+            diskDiskDistanceMeasurements.auto_correlation_function(disk, t)
+              
         for i in range(N):
             
             pos = disk[i].pygame_propagate(t, wallLength)
-            if (T+t)%30 == 0:
+            if (T+t)%33 == 0 and T > 300:
                 if positionSample:
                     positionMeasurements.sample(pos[0])
                 
-                if radialDistributionSample:
-                    diskDiskDistanceMeasurements.auto_correlation_function(disk)
-            
+        
                 
             if animation: pygame.draw.circle(screen, black, pos.astype(int), int(radius), 0)
       
@@ -143,7 +144,7 @@ if velocityMeasurements:
     velocityMeasurements.normalise()
     velocityMeasurements.plot_results()
 if radialDistributionSample:
-    diskDiskDistanceMeasurements.normalise()
+    #diskDiskDistanceMeasurements.normalise()
     diskDiskDistanceMeasurements.plot_results()
 
  
