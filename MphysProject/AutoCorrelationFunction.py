@@ -14,11 +14,11 @@ class PairCorrelation(object):
     def __init__(self):
         
         self.gr_bins = []
-        self.scalar = 1.0
+        self.scalar = 4.0
         self.gr_count = 0.0
         self.wallLength = 500.0
-        self.radius = 10.0
-        self.N = 50
+        self.radius = 25.0
+        self.N = 20
         self.rho = float(self.N) / self.wallLength**2
         
         self.max_r = 5* self.radius
@@ -46,14 +46,23 @@ class PairCorrelation(object):
         shell = shell*self.d_r
         return shell
 
+    def in_middle(self, pos):
+        middle = True
+        
+        for xy in pos:
+            if (self.wallLength/2) -abs(xy) < self.max_r:
+                middle = False
+        return middle
+
     def auto_correlation_function(self, hardDisks, t):
         for j in range(self.N):
             if j > 0:
                 hardDisk0Position = hardDisks[0].position+hardDisks[0].velocity*t
                 
                 distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
-                if distance <= self.max_r:
-                    g_r = 1.0/(self.rho * self.get_shell_size(hardDisk0Position, distance))
+                if distance <= self.max_r and self.in_middle(hardDisk0Position):
+                    shell = self.get_shell_size(hardDisk0Position, distance)
+                    g_r = 1.0/(self.rho * shell )
                     
                     self.sample(g_r, distance)
         

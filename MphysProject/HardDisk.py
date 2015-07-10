@@ -2,7 +2,7 @@
 A class for Hard Disk parameters
 '''
 import numpy as np
-from math import sqrt
+from math import sqrt, ceil
  
 class Disk(object):
   
@@ -40,6 +40,16 @@ class Disk(object):
         maxL = boxLength - self.radius
         self.position = np.array([(np.random.random()-0.5)*maxL,
                                   (np.random.random()-0.5)*maxL])
+        
+    def set_lattice_position(self, boxLength, i, N):
+        noOfDiskInAxis = ceil(sqrt(float(N)))
+        space = (boxLength - 2*self.radius*1.001)
+        y = float(int(float(i+1)/noOfDiskInAxis))
+        x = (float(i+1)/noOfDiskInAxis) - y
+        x = x*space - space/2
+        y = y/noOfDiskInAxis*space - space/2
+        self.position = np.array([x, y])
+        
         
     def get_wall_collision_time(self, boxLength, t):
         v = self.velocity

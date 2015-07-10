@@ -5,14 +5,14 @@ import AutoCorrelationFunction
 import numpy as np
 from math import sqrt
 
-animation = False
+animation = True
 positionSample = False
 velocitySample = False
 radialDistributionSample = True
 
 
-N =  50
-radius = 10
+N =  10
+radius = 5
 wallLength = 500.0
 
 
@@ -50,9 +50,11 @@ for i in range(N):
     disk[i] = HardDisk.Disk()
     disk[i].set_radius(radius)
     disk[i].set_velocity([0.0, 0.0])
-    if i == 0:
-        disk[i].set_velocity([sqrt(2.0*E), 0.0])
-    disk[i].set_random_position(wallLength)
+    
+    disk[i].set_velocity([sqrt(2.0*E)/float(N),sqrt(2.0*E)/float(N)])
+    disk[i].set_lattice_position(wallLength, i, N)
+    #disk[i].set_random_position(wallLength)
+    
     
  
     disk[i].get_wall_collision_time(wallLength, T)
