@@ -5,10 +5,10 @@ import AutoCorrelationFunction
 import numpy as np
 from math import sqrt
 
-animation = False
+animation = True   
 positionSample = False
 velocitySample = False
-radialDistributionSample = True
+radialDistributionSample = False
 
 
 
@@ -18,7 +18,7 @@ wallLength = 500.0
 
 
 
-E = 20*N
+E = N
 T = 0.0
 wallCollisionTimes = []
 diskCollisionTimes = {}
@@ -52,21 +52,21 @@ for i in range(N):
     disk[i].set_radius(radius)
     disk[i].set_velocity([0.0, 0.0])
     if i == 0:
-        disk[i].set_velocity([sqrt(2.0*E)/float(N),sqrt(2.2*E)/float(N)])
+        disk[i].set_velocity([sqrt(2.0*E),sqrt(2.2*E)])
     disk[i].set_lattice_position(wallLength, i, N)
     #disk[i].set_random_position(wallLength)
     
     
  
     disk[i].get_wall_collision_time(wallLength, T)
-    wallCollisionTimes.append(round(disk[i].wallCollision,12))
+    wallCollisionTimes.append(round(float(disk[i].wallCollision),8))
 
         
 for i in range(N):
     for j in range(N):
         if i != j:
             disk[i].get_disk_disk_collision_time(disk[j], T)
-            diskCollisionTimes[(i,j)] = round(disk[i].diskCollision, 12)
+            diskCollisionTimes[(i,j)] = round(float(disk[i].diskCollision), 8)
     
 
 done = False
@@ -74,7 +74,6 @@ while done == False:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-            
     nextT = min(wallCollisionTimes)
     minDiskTime = float('inf')
     for pair in diskCollisionTimes:
@@ -94,25 +93,25 @@ while done == False:
         if wallCollisionTimes[i] == T:
             disk[i].wall_collision(wallLength)
             disk[i].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[i] = round(T + disk[i].wallCollision, 12)
+            wallCollisionTimes[i] = round(float(T + disk[i].wallCollision), 8)
             for pair in diskCollisionTimes:
                 if pair[0] == i or pair[1] == i:
                     disk[pair[0]].get_disk_disk_collision_time(disk[pair[1]], T)
-                    diskCollisionTimes[pair] = round(T + disk[pair[0]].diskCollision, 12)
+                    diskCollisionTimes[pair] = round(float(T + disk[pair[0]].diskCollision), 8)
                     
     for pair in diskCollisionTimes:
         if diskCollisionTimes[pair] == T:
             disk[pair[0]].disk_disk_collision(disk[pair[1]])
             disk[pair[0]].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[pair[0]] = round(T + disk[pair[0]].wallCollision, 12)
+            wallCollisionTimes[pair[0]] = round(float(T + disk[pair[0]].wallCollision), 8)
             disk[pair[1]].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[pair[1]] = round(T + disk[pair[1]].wallCollision, 12)
+            wallCollisionTimes[pair[1]] = round(float(T + disk[pair[1]].wallCollision), 8)
             
             for nextPair in diskCollisionTimes:
                 if nextPair[0] == pair[0] or nextPair[1] == pair[0] or nextPair[0] == pair[1] or nextPair[1] == pair[1]:
                     if nextPair != pair and nextPair != (pair[1],pair[0]):
                         disk[nextPair[0]].get_disk_disk_collision_time(disk[nextPair[1]], T) 
-                        diskCollisionTimes[nextPair] = round(T + disk[nextPair[0]].diskCollision, 8)
+                        diskCollisionTimes[nextPair] = round(float(T + disk[nextPair[0]].diskCollision), 8)
                     else:
                         disk[nextPair[0]].diskCollision = float('inf')
                         disk[nextPair[1]].diskCollision = float('inf')
@@ -123,14 +122,16 @@ while done == False:
         for i in range(N):
             velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
     for t in range(int(deltaT)):   
-        if radialDistributionSample and (T+t)%33 == 0 and T > 300:
+        if radialDistributionSample and int(T+t)%2 == 0 and T > 300:
             diskDiskDistanceMeasurements.auto_correlation_function(disk, t)
-              
+        
         for i in range(N):
             
-            pos = disk[i].pygame_propagate(t, wallLength)
-            if (T+t)%33 == 0 and T > 300:
-                if positionSample:
+        
+            pos = disk[i].pygame_propagate(t, wallLength)     
+            if positionSample and int(T+t)%33 == 0 and T > 300:
+                for i in range(N):
+                
                     positionMeasurements.sample(pos[0])
                 
         

@@ -17,6 +17,7 @@ class Disk(object):
         self.previousVelocity = self.velocity
         
         
+        
     def set_position(self,positionVector):
         self.position = np.array(positionVector)
         
@@ -69,12 +70,12 @@ class Disk(object):
             
         if tMin <=0.0: print 'negetive time', tMin, x, v
         elif tMin == float('inf'): print 'infinite time', tMin, x, v
-        tMin = round(tMin, 6)
+        tMin = round(tMin, 7)
         self.wallCollision = tMin
     
     def wall_collision(self, boxLength):
         HalfWall = boxLength/2.0
-        x = np.around(self.position, 6)
+        x = np.around((self.position), 8)
         v = self.velocity
         r = self.radius
         for xy in range(2):
@@ -92,12 +93,12 @@ class Disk(object):
         del_v = self.velocity-disk2.velocity
         gamma = np.dot(del_x, del_v)**2 - (np.linalg.norm(del_v)**2) * ((np.linalg.norm(del_x)**2) - 4*(self.radius**2))
         if gamma > 0 and np.dot(del_x, del_v) < 0:
-            t_min = round(-((np.dot(del_x, del_v)+sqrt(gamma))/(np.linalg.norm(del_v)**2)),8)
+            t_min = round(float(-((np.dot(del_x, del_v)+sqrt(gamma))/(np.linalg.norm(del_v)**2))),8)
             if t_min < 0.0: 
                 t_min = float('inf')
         else:
             t_min = float('inf')
-        t_min = round(t_min, 6)
+        t_min = round(t_min, 7)
         self.diskCollision = t_min
         
     def disk_disk_collision(self, disk2):

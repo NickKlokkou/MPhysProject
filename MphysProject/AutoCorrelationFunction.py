@@ -17,8 +17,8 @@ class PairCorrelation(object):
         self.scalar = 4.0
         self.gr_count = 0.0
         self.wallLength = 500.0
-        self.radius = 25.0
-        self.N = 20
+        self.radius = 40
+        self.N = 25
         self.rho = float(self.N) / self.wallLength**2
         
         self.max_r = 5* self.radius
@@ -60,7 +60,7 @@ class PairCorrelation(object):
                 hardDisk0Position = hardDisks[0].position+hardDisks[0].velocity*t
                 
                 distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
-                if distance <= self.max_r and self.in_middle(hardDisk0Position):
+                if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
                     shell = self.get_shell_size(hardDisk0Position, distance)
                     g_r = 1.0/(self.rho * shell )
                     
