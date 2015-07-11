@@ -5,16 +5,21 @@ import AutoCorrelationFunction
 import numpy as np
 from math import sqrt
 
-animation = True   
-positionSample = False
+animation = False    
+allMeasurements = True
+
+positionSample = True
 velocitySample = False
 radialDistributionSample = False
 
-
+if allMeasurements:
+    positionSample = True
+    velocitySample = True
+    radialDistributionSample = True
 
 N =  25
-radius = 40
-wallLength = 500.0
+radius = 0.08
+wallLength = 1.0
 
 
 
@@ -26,7 +31,8 @@ disk = {}
 
 
 pygame.init()
-size = (500, 500)
+screenScalar = 500
+size = (int(screenScalar*wallLength), int(screenScalar*wallLength))
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 pygame.display.set_caption("Hard Disk Model")
@@ -41,9 +47,9 @@ black =(0,0,0)
 white = (255, 255, 255)
 grey = (100, 100, 100)
 
-positionMeasurements = Measurements.Measure(1.0)
-velocityMeasurements = Measurements.Measure(50.0)
-diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation()
+positionMeasurements = Measurements.Measure(float(screenScalar))
+velocityMeasurements = Measurements.Measure(float(screenScalar))
+diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation(float(screenScalar))
 
 
 for i in range(N):
@@ -52,7 +58,7 @@ for i in range(N):
     disk[i].set_radius(radius)
     disk[i].set_velocity([0.0, 0.0])
     if i == 0:
-        disk[i].set_velocity([sqrt(2.0*E),sqrt(2.2*E)])
+        disk[i].set_velocity([sqrt(2.001*E)/sqrt(2.0),sqrt(2.0*E)/sqrt(2.0)])
     disk[i].set_lattice_position(wallLength, i, N)
     #disk[i].set_random_position(wallLength)
     
@@ -61,7 +67,7 @@ for i in range(N):
     disk[i].get_wall_collision_time(wallLength, T)
     wallCollisionTimes.append(round(float(disk[i].wallCollision),8))
 
-        
+print 'placed'
 for i in range(N):
     for j in range(N):
         if i != j:
@@ -86,7 +92,7 @@ while done == False:
         
         disk[i].propagate(T, nextT)
     
-    deltaT = nextT- T
+    deltaT = 100*screenScalar*(nextT- T)
     T = nextT
     
     for i in range(N):
@@ -121,22 +127,20 @@ while done == False:
     if velocitySample:
         for i in range(N):
             velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
-    for t in range(int(deltaT)):   
-        if radialDistributionSample and int(T+t)%2 == 0 and T > 300:
-            diskDiskDistanceMeasurements.auto_correlation_function(disk, t)
-        
+    for t in range(int(deltaT)):
+        if radialDistributionSample and int(screenScalar*(T+t))%3 == 0 and T > 1:
+            diskDiskDistanceMeasurements.auto_correlation_function(disk, t/(100*screenScalar))
         for i in range(N):
             
         
-            pos = disk[i].pygame_propagate(t, wallLength)     
-            if positionSample and int(T+t)%33 == 0 and T > 300:
+            pos = disk[i].pygame_propagate(t/(100*screenScalar), wallLength)     
+            if positionSample and int(screenScalar*(T+t))%3 == 0  and T > 1: 
                 for i in range(N):
-                
                     positionMeasurements.sample(pos[0])
                 
         
                 
-            if animation: pygame.draw.circle(screen, black, pos.astype(int), int(radius), 0)
+            if animation: pygame.draw.circle(screen, black, pos.astype(int)*screenScalar, int(radius*screenScalar), 0)
       
         animate()
 pygame.quit

@@ -44,12 +44,30 @@ class Disk(object):
         
     def set_lattice_position(self, boxLength, i, N):
         noOfDiskInAxis = ceil(sqrt(float(N)))
-        space = (boxLength - 2*self.radius*1.001)
-        y = float(int(float(i+1)/noOfDiskInAxis))
-        x = (float(i+1)/noOfDiskInAxis) - y
-        x = x*space - space/2
-        y = y/noOfDiskInAxis*space - space/2
-        self.position = np.array([x, y])
+        space = (boxLength - 2.2*self.radius)
+        placed = False
+        j = 0
+        gap = space/(noOfDiskInAxis-1)
+        print noOfDiskInAxis
+        while placed == False:
+            for x in range(int(noOfDiskInAxis)):
+                
+                for y in range(int(noOfDiskInAxis)):
+                    
+                    if j == i:
+                        xpos = gap*x - space/2
+                        ypos = gap*y - space/2
+                        self.position = np.array([xpos,ypos])
+                        print xpos
+                        placed = True
+                    j+=1
+                    
+        #y = float(int(float(i+1)/noOfDiskInAxis))
+        #x = (float(i+1)/noOfDiskInAxis) - y
+        #x = x*space - space/2
+        #y = y/noOfDiskInAxis*space - space/2
+        
+        #self.position = np.array([x, y])
         
         
     def get_wall_collision_time(self, boxLength, t):

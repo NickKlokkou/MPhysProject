@@ -11,13 +11,13 @@ import pylab
    
 class PairCorrelation(object):
     
-    def __init__(self):
+    def __init__(self,scalar):
         
         self.gr_bins = []
-        self.scalar = 4.0
+        self.scalar = scalar
         self.gr_count = 0.0
-        self.wallLength = 500.0
-        self.radius = 40
+        self.wallLength = 1.0
+        self.radius = 0.08
         self.N = 25
         self.rho = float(self.N) / self.wallLength**2
         
