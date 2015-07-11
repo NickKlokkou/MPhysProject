@@ -5,19 +5,20 @@ import AutoCorrelationFunction
 import numpy as np
 from math import sqrt
 
-animation = True
+animation = False
 positionSample = False
 velocitySample = False
 radialDistributionSample = True
 
 
-N =  10
-radius = 5
+
+N =  25
+radius = 40
 wallLength = 500.0
 
 
 
-E = N
+E = 20*N
 T = 0.0
 wallCollisionTimes = []
 diskCollisionTimes = {}
@@ -50,22 +51,22 @@ for i in range(N):
     disk[i] = HardDisk.Disk()
     disk[i].set_radius(radius)
     disk[i].set_velocity([0.0, 0.0])
-    
-    disk[i].set_velocity([sqrt(2.0*E)/float(N),sqrt(2.0*E)/float(N)])
+    if i == 0:
+        disk[i].set_velocity([sqrt(2.0*E)/float(N),sqrt(2.2*E)/float(N)])
     disk[i].set_lattice_position(wallLength, i, N)
     #disk[i].set_random_position(wallLength)
     
     
  
     disk[i].get_wall_collision_time(wallLength, T)
-    wallCollisionTimes.append(round(disk[i].wallCollision,6))
+    wallCollisionTimes.append(round(disk[i].wallCollision,12))
 
         
 for i in range(N):
     for j in range(N):
         if i != j:
             disk[i].get_disk_disk_collision_time(disk[j], T)
-            diskCollisionTimes[(i,j)] = round(disk[i].diskCollision, 6)
+            diskCollisionTimes[(i,j)] = round(disk[i].diskCollision, 12)
     
 
 done = False
@@ -93,25 +94,25 @@ while done == False:
         if wallCollisionTimes[i] == T:
             disk[i].wall_collision(wallLength)
             disk[i].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[i] = round(T + disk[i].wallCollision, 6)
+            wallCollisionTimes[i] = round(T + disk[i].wallCollision, 12)
             for pair in diskCollisionTimes:
                 if pair[0] == i or pair[1] == i:
                     disk[pair[0]].get_disk_disk_collision_time(disk[pair[1]], T)
-                    diskCollisionTimes[pair] = round(T + disk[pair[0]].diskCollision, 6)
+                    diskCollisionTimes[pair] = round(T + disk[pair[0]].diskCollision, 12)
                     
     for pair in diskCollisionTimes:
         if diskCollisionTimes[pair] == T:
             disk[pair[0]].disk_disk_collision(disk[pair[1]])
             disk[pair[0]].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[pair[0]] = round(T + disk[pair[0]].wallCollision, 6)
+            wallCollisionTimes[pair[0]] = round(T + disk[pair[0]].wallCollision, 12)
             disk[pair[1]].get_wall_collision_time(wallLength, T)
-            wallCollisionTimes[pair[1]] = round(T + disk[pair[1]].wallCollision, 6)
+            wallCollisionTimes[pair[1]] = round(T + disk[pair[1]].wallCollision, 12)
             
             for nextPair in diskCollisionTimes:
                 if nextPair[0] == pair[0] or nextPair[1] == pair[0] or nextPair[0] == pair[1] or nextPair[1] == pair[1]:
                     if nextPair != pair and nextPair != (pair[1],pair[0]):
                         disk[nextPair[0]].get_disk_disk_collision_time(disk[nextPair[1]], T) 
-                        diskCollisionTimes[nextPair] = round(T + disk[nextPair[0]].diskCollision)
+                        diskCollisionTimes[nextPair] = round(T + disk[nextPair[0]].diskCollision, 8)
                     else:
                         disk[nextPair[0]].diskCollision = float('inf')
                         disk[nextPair[1]].diskCollision = float('inf')
