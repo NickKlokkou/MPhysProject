@@ -11,14 +11,14 @@ import pylab
    
 class PairCorrelation(object):
     
-    def __init__(self,scalar):
+    def __init__(self,scalar, radius, N, wallLength):
         
         self.gr_bins = []
         self.scalar = scalar
         self.gr_count = 0.0
-        self.wallLength = 1.0
-        self.radius = 0.08
-        self.N = 25
+        self.wallLength = wallLength
+        self.radius = radius
+        self.N = N
         self.rho = float(self.N) / self.wallLength**2
         
         self.max_r = 5* self.radius
@@ -58,8 +58,11 @@ class PairCorrelation(object):
         for j in range(self.N):
             if j > 0:
                 hardDisk0Position = hardDisks[0].position+hardDisks[0].velocity*t
-                
-                distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
+                try:
+                    distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
+                except KeyError:
+                    print j, hardDisks
+                    sys.exit
                 if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
                     shell = self.get_shell_size(hardDisk0Position, distance)
                     g_r = 1.0/(self.rho * shell )
@@ -82,7 +85,9 @@ class PairCorrelation(object):
         
     def plot_results(self):
         #plot results
+        titleStr = "Radial Distribution Function with " + str(self.N) + ' disks of radius ' + str(self.radius)
         pylab.plot(self.gr_bins)
+        pylab.title(titleStr)
         pylab.show()
 
     
