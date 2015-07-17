@@ -63,8 +63,8 @@ for i in range(N):
     disk[i].set_velocity([0.0, 0.0])
     if i == 0:
         disk[i].set_velocity([sqrt(2.001*E)/sqrt(2.0),sqrt(2.0*E)/sqrt(2.0)])
-    disk[i].set_lattice_position(wallLength, i, N)
-    #disk[i].set_random_position(wallLength)
+    #disk[i].set_lattice_position(wallLength, i, N)
+    disk[i].set_random_position(wallLength)
     
     
  

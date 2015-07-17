@@ -10,7 +10,7 @@ class Measure(object):
     '''
     Class responsible for storing and processing measurements from simulation
     '''
-    def __init__(self, scaler):
+    def __init__(self, scaler, radius, N):
         self.bins = []
         self.scaler = scaler
         
