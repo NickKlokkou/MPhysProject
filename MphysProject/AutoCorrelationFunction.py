@@ -52,23 +52,25 @@ class PairCorrelation(object):
         for xy in pos:
             if (self.wallLength/2) -abs(xy) < self.max_r:
                 middle = False
+        middle = True
         return middle
 
     def auto_correlation_function(self, hardDisks, t):
         for j in range(self.N):
-            if j > 0:
-                hardDisk0Position = hardDisks[0].position+hardDisks[0].velocity*t
-                try:
-                    distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
-                except KeyError:
-                    print j, hardDisks
-                    sys.exit
-                if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
-                    shell = self.get_shell_size(hardDisk0Position, distance)
-                    g_r = 1.0/(self.rho * shell )
-                    
-                    self.sample(g_r, distance)
-        
+            for i in range(self.N):
+                if j != i:
+                    hardDisk0Position = hardDisks[i].position+hardDisks[i].velocity*t
+                    try:
+                        distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
+                    except KeyError:
+                        print j, hardDisks
+                        sys.exit
+                    if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
+                        shell = self.get_shell_size(hardDisk0Position, distance)
+                        g_r = 1.0/(self.rho * shell )
+                        
+                        if self.in_middle(hardDisk0Position): self.sample(g_r, distance)
+            
 
     def sample(self, gr, r):
         r = float(self.scalar)*r 

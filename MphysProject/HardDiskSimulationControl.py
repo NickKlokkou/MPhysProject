@@ -5,11 +5,11 @@ import Measurements
 import AutoCorrelationFunction
 import numpy as np
 import HardDiskConfig
-from math import sqrt
+from math import sqrt, ceil
 
 
 
-animation = False    
+animation = True    
 allMeasurements = True
 
 positionSample = True
@@ -17,8 +17,8 @@ velocitySample = False
 radialDistributionSample = False
 
 if allMeasurements:
-    positionSample = True
-    velocitySample = True
+    positionSample = False
+    velocitySample = False
     radialDistributionSample = True
 
 N =HardDiskConfig.N  #25
@@ -35,7 +35,7 @@ disk = {}
 
 
 pygame.init()
-screenScalar = 500
+screenScalar = 500.0
 size = (int(screenScalar*wallLength), int(screenScalar*wallLength))
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
@@ -65,9 +65,14 @@ for i in range(N):
         disk[i].set_velocity([sqrt(2.001*E)/sqrt(2.0),sqrt(2.0*E)/sqrt(2.0)])
     #disk[i].set_lattice_position(wallLength, i, N)
     disk[i].set_random_position(wallLength)
-    
-    
- 
+"""  
+Nsqrt=ceil(sqrt(N))
+
+for ij in range(N):
+    i,j = divmod(ij, Nsqrt)
+    disk[ij].set_position([i/Nsqrt - wallLength/2.0 + 0.01*radius, j/Nsqrt - wallLength/2.0 + 1.01*radius ])
+"""
+for i in range(N):
     disk[i].get_wall_collision_time(wallLength, T)
     wallCollisionTimes.append(round(float(disk[i].wallCollision),8))
 
@@ -96,7 +101,7 @@ while done == False:
         
         disk[i].propagate(T, nextT)
     
-    deltaT = 100*screenScalar*(nextT- T)
+    deltaT = screenScalar*(nextT- T)   #100 *
     T = nextT
     
     for i in range(N):
@@ -132,21 +137,22 @@ while done == False:
         for i in range(N):
             velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
     for t in range(int(deltaT)):
-        if radialDistributionSample and int(screenScalar*(T+t))%37 == 0 and T > 2:
+        if radialDistributionSample and int(screenScalar*(T+t))%37 == 0 and T > 1:
             diskDiskDistanceMeasurements.auto_correlation_function(disk, t/(100*screenScalar))
-        for i in range(N):
+        if animation or positionSample:
+            for i in range(N):
             
-        
-            pos = disk[i].pygame_propagate(t/(100*screenScalar), wallLength)     
-            if positionSample and int(screenScalar*(T+t))%37 == 0  and T > 1: 
-                for i in range(N):
+                pos = disk[i].pygame_propagate(float(t)/(screenScalar), wallLength) 
+                if positionSample and int(screenScalar*(T+t))%37 == 0  and T > 1: 
+                #for i in range(N):
                     positionMeasurements.sample(pos[0])
                 
         
                 
-            if animation: pygame.draw.circle(screen, black, pos.astype(int)*screenScalar, int(radius*screenScalar), 0)
-      
+                if animation: pygame.draw.circle(screen, black, (pos*screenScalar).astype(int), int(radius*screenScalar), 0)
+                
         animate()
+    
 pygame.quit
 
 if positionSample: 
