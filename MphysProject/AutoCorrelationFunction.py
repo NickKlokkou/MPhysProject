@@ -50,28 +50,46 @@ class PairCorrelation(object):
         middle = True
         
         for xy in pos:
-            if (self.wallLength/2) -abs(xy) < self.max_r:
+            if abs(xy) < 2*self.radius:
+            #if (self.wallLength/2) -abs(xy) < self.max_r:
                 middle = False
-        middle = True
+        #middle = True
         return middle
 
     def auto_correlation_function(self, hardDisks, t):
-        for j in range(self.N):
-            for i in range(self.N):
-                if j != i:
-                    hardDisk0Position = hardDisks[i].position+hardDisks[i].velocity*t
-                    try:
-                        distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
-                    except KeyError:
-                        print j, hardDisks
-                        sys.exit
-                    if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
-                        shell = self.get_shell_size(hardDisk0Position, distance)
-                        g_r = 1.0/(self.rho * shell )
-                        
-                        if self.in_middle(hardDisk0Position): self.sample(g_r, distance)
-            
-
+        for i in range(self.N):
+            hardDisk0Position = hardDisks[i].position+hardDisks[i].velocity*t
+            if self.in_middle(hardDisk0Position): 
+                for j in range(self.N):
+                    if j != i: 
+                        try:
+                            distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
+                        except KeyError:
+                            print j, hardDisks
+                            sys.exit
+                        if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
+                            shell = self.get_shell_size(hardDisk0Position, distance)
+                            g_r = 1.0/(self.rho * shell )
+                            self.gr_count+=g_r
+                            self.sample(g_r, distance)
+                
+    def simple_auto_correlation_function(self, hardDisks, t):
+        for i in range(self.N):
+            hardDisk0Position = hardDisks[i].position+hardDisks[i].velocity*t
+            if self.in_middle(hardDisk0Position): 
+                for j in range(self.N):
+                    if j != i: 
+                        try:
+                            distance = np.linalg.norm(hardDisk0Position - (hardDisks[j].position+hardDisks[j].velocity*t))
+                        except KeyError:
+                            print j, hardDisks
+                            sys.exit
+                        if distance <= self.max_r:# and self.in_middle(hardDisk0Position):
+                            g_r = 1.0
+                            self.gr_count+=g_r
+                            self.sample(g_r, distance)
+                            
+                            
     def sample(self, gr, r):
         r = float(self.scalar)*r 
         try:
@@ -83,7 +101,12 @@ class PairCorrelation(object):
         
     def normalise(self):
         for a in range(len(self.gr_bins)):
-            self.gr_bins[a]=self.gr_bins[a]/self.gr_count
+            self.gr_bins[a]=self.gr_bins[a]/(self.gr_count/self.scalar)
+            
+    def simple_normalise(self):
+        for a in range(len(self.gr_bins)):
+            self.gr_bins[a]=self.gr_bins[a]/(self.rho*2*math.pi*(float(a+1)/self.scalar))
+            #self.gr_bins[a]=self.gr_bins[a]/(self.gr_count/self.scalar)
         
     def plot_results(self):
         #plot results

@@ -6,10 +6,11 @@ import AutoCorrelationFunction
 import numpy as np
 import HardDiskConfig
 from math import sqrt, ceil
+from numpy.random.mtrand import randint
 
 
 
-animation = True    
+animation = False    
 allMeasurements = True
 
 positionSample = True
@@ -25,7 +26,7 @@ N =HardDiskConfig.N  #25
 radius = HardDiskConfig.radius        #0.08
 wallLength = HardDiskConfig.wallLength
 
-
+beginningMeasurements = False
 
 E = N
 T = 0.0
@@ -53,7 +54,7 @@ grey = (100, 100, 100)
 
 positionMeasurements = Measurements.Measure(float(screenScalar),radius, N)
 velocityMeasurements = Measurements.Measure(float(screenScalar),radius, N)
-diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation(float(screenScalar), radius, N, wallLength)
+diskDiskDistanceMeasurements = AutoCorrelationFunction.PairCorrelation(float(2000), radius, N, wallLength)
 
 
 for i in range(N):
@@ -64,14 +65,15 @@ for i in range(N):
     if i == 0:
         disk[i].set_velocity([sqrt(2.001*E)/sqrt(2.0),sqrt(2.0*E)/sqrt(2.0)])
     #disk[i].set_lattice_position(wallLength, i, N)
-    disk[i].set_random_position(wallLength)
-"""  
+    #disk[i].set_random_position(wallLength)
+
 Nsqrt=ceil(sqrt(N))
 
 for ij in range(N):
     i,j = divmod(ij, Nsqrt)
-    disk[ij].set_position([i/Nsqrt - wallLength/2.0 + 0.01*radius, j/Nsqrt - wallLength/2.0 + 1.01*radius ])
-"""
+    print i, j,Nsqrt
+    disk[ij].set_position([(i+0.5)/Nsqrt-wallLength/2, (j+0.5)/Nsqrt-wallLength/2 ])
+
 for i in range(N):
     disk[i].get_wall_collision_time(wallLength, T)
     wallCollisionTimes.append(round(float(disk[i].wallCollision),8))
@@ -101,7 +103,7 @@ while done == False:
         
         disk[i].propagate(T, nextT)
     
-    deltaT = screenScalar*(nextT- T)   #100 *
+    deltaT = 100*screenScalar*(nextT- T)   #100 *
     T = nextT
     
     for i in range(N):
@@ -137,13 +139,16 @@ while done == False:
         for i in range(N):
             velocityMeasurements.sample(np.linalg.norm(disk[i].velocity))
     for t in range(int(deltaT)):
-        if radialDistributionSample and int(screenScalar*(T+t))%37 == 0 and T > 1:
-            diskDiskDistanceMeasurements.auto_correlation_function(disk, t/(100*screenScalar))
+        
+        #if radialDistributionSample and int((T+t))%(1+np.random.randint(20)) == 0 and T > 1:
+        if radialDistributionSample and int((T+t))%(127) == 0 and T > 1:
+            #print 'correlating!'
+            diskDiskDistanceMeasurements.simple_auto_correlation_function(disk, t/(100*screenScalar))
         if animation or positionSample:
             for i in range(N):
             
-                pos = disk[i].pygame_propagate(float(t)/(screenScalar), wallLength) 
-                if positionSample and int(screenScalar*(T+t))%37 == 0  and T > 1: 
+                pos = disk[i].pygame_propagate(float(t)/(100*screenScalar), wallLength) 
+                if positionSample and int((T+t))%(1+np.random.randint(5)) == 0  and T > 0.1: 
                 #for i in range(N):
                     positionMeasurements.sample(pos[0])
                 
@@ -152,7 +157,10 @@ while done == False:
                 if animation: pygame.draw.circle(screen, black, (pos*screenScalar).astype(int), int(radius*screenScalar), 0)
                 
         animate()
-    
+    if not beginningMeasurements: print t
+    if T>0.1 and not beginningMeasurements:
+        print 'Beginning to measure'
+        beginningMeasurements = True
 pygame.quit
 
 if positionSample: 
@@ -162,7 +170,7 @@ if velocityMeasurements:
     velocityMeasurements.normalise()
     velocityMeasurements.plot_results()
 if radialDistributionSample:
-    #diskDiskDistanceMeasurements.normalise()
+    diskDiskDistanceMeasurements.simple_normalise()
     diskDiskDistanceMeasurements.plot_results()
 
  

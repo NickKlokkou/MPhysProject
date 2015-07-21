@@ -10,8 +10,8 @@ try:
 except IndexError:
     print 'Not enough arguments. 1st arg is N, 2nd is radius'
     print 'taking defult values'
-    N = 25
-    radius = 0.01
+    N = 16
+    radius = 0.1
 
 
 wallLength = 1.0
