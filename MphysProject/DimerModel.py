@@ -73,8 +73,8 @@ def constrain_update(s_ux, s_uy, ux,uy,pairs,N,d):
     return ux, uy
 
 d = 1.0#distance dimers are apart
-dt = 0.0009
-N=4
+dt = 0.00009#0.0009
+N=64
 L = 12.0
 xmax = 0.5*L - 0.5
 t=0.0
@@ -91,13 +91,24 @@ for k in range(int(float(N/2))):
 print pairs
 
 halfNsqrt=ceil(sqrt(float(N)/2))
-
+"""
 for ij in range(N/2):
     i,j = divmod(ij, halfNsqrt)
     ux[2*ij]=1.3*i - L/2.0 + 1 -d/2
     uy[2*ij]=1.3*j - L/2.0 + 1
     ux[2*ij+1]=1.3*i - L/2.0 + 1 +d/2
     uy[2*ij+1]=1.3*j - L/2.0 + 1 
+    
+"""
+
+for ij in range(N/2):
+    i,j = divmod(ij, halfNsqrt)
+    ux[2*ij]=(i+0.5)*L/halfNsqrt-L/2 -d/2
+    uy[2*ij]=(j+0.5)*L/halfNsqrt-L/2
+    ux[2*ij+1]=(i+0.5)*L/halfNsqrt-L/2 +d/2
+    uy[2*ij+1]=(j+0.5)*L/halfNsqrt-L/2
+
+print ux, uy
 pygame.init()
 Lscreen = 500.0
 screen_size = 500.0
@@ -107,8 +118,10 @@ screen = pygame.display.set_mode([int(screen_size),int(screen_size)])
 pygame.display.set_caption('Molecules with Lennard-Jones potential. N = '+str(N))
 clock = pygame.time.Clock()
 
-vx[0]=7.0 #initial conditions: one particle moves
-vy[0]=5.0
+vx[0]=100.0 #initial conditions: one particle moves
+vy[0]=100.0
+vx[1]=10.0
+vy[1]=10.0
 ax,ay=forces(ux,uy,N)
 
 
