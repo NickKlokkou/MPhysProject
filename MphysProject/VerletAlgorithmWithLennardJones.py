@@ -4,7 +4,9 @@ Created on 17 Jul 2015
 @author: NicholasKlokkou
 '''
 
-scaling = True
+
+scaling = False
+
 
 import pygame
 import numpy as np
@@ -13,8 +15,9 @@ import Measurements
 import pylab
 
 
+
 dimer = True
-d = 1.0
+d = 0.8
 animation = True
 auto_correlate = True
 scalar = 10.0
@@ -31,24 +34,26 @@ def animate():
         pygame.display.flip()
         screen.fill(white)
 
-def forces(ux,uy,N):
-
+def forces(ux,uy,N, pairs_x, dimers):
+    
     rx=ux-ux[:,None] #obscure way to get matrix rx[i,j] = ux[i]-ux[j]
     ry=uy-uy[:,None]
-    
+
     rx = rx - L*np.round(rx/L,0)
     ry = ry - L*np.round(ry/L,0)
-    
     
     d = np.sqrt(rx**2+ry**2)
 
     d = d + np.eye(N)
     dinv = 1.0/d - np.eye(N)
     
+    if dimers: dinv=dinv*pairs_x
+    
     twdinv8 = 12.0*dinv**8
     twdinv14 = 12.0*dinv**14
     global PE
-    PE = 0.5*np.sum((1.0/d)**12-2*(1.0/d)**6)
+    #PE = 0.5*np.sum((1.0/d)**12-2*(1.0/d)**6)
+    PE = 0.5*np.sum((dinv)**12-2*(dinv)**6)
     return (rx*twdinv14-rx*twdinv8).sum(axis=0),(ry*twdinv14-ry*twdinv8).sum(axis=0)+0.00
 
 
@@ -65,22 +70,34 @@ def constrain_update(s_ux, s_uy, ux,uy,pairs,N,d,L):
     for ij in pairs:
         i=ij[0]
         j=ij[1]
-       
+        
         si = np.array([s_ux[i],s_uy[i]])
         sj = np.array([s_ux[j],s_uy[j]])
         ri = np.array([ux[i],uy[i]])
         rj = np.array([ux[j],uy[j]])
         
-        dr = rj-ri   
+        dr = rj-ri
+        
         dr = dr - L*np.round(dr/L,0)
-    
+
         ds = sj-si
+        
         ds = ds - L*np.round(ds/L,0)
+
         constraint = (np.dot(ds,ds)-d**2) / (4.0*np.dot(ds,dr))
         
-        rinext = si + constraint*(rj-ri)
-        rjnext = sj - constraint*(rj-ri)
-       
+        rinext = si + constraint*(dr)
+        rjnext = sj - constraint*(dr)
+        
+        if abs(rinext[0]) > L:
+            rinext[0] = rinext[0] - L*rinext[0]/abs(rinext[0])
+        if abs(rinext[1]) > L:
+            rinext[1] = rinext[1] - L*rinext[1]/abs(rinext[1])
+        if abs(rjnext[0]) > L:
+            rjnext[0] = rjnext[0] - L*rjnext[0]/abs(rjnext[0])
+        if abs(rjnext[1]) > L:
+            rjnext[1] = rjnext[1] - L*rjnext[1]/abs(rjnext[1])
+        
         ux[i] = rinext[0]
         uy[i] = rinext[1]
         ux[j] = rjnext[0]
@@ -92,8 +109,8 @@ PE_bins = []
 KE_bins = []
 Total_bins = []
 
-dt = 0.0009
-N = 16
+dt = 0.00009#0.0009
+N = 72
 L = 12
 xmax = 0.5*L - 0.5
 t=0.0
@@ -109,6 +126,7 @@ for ij in range(N):
     ux[ij]=1.3*i - L/2.0 + 1
     uy[ij]=1.3*j - L/2.0 + 1
 '''
+pairs = []
 if dimer:
     for ij in range(N/2):
         i,j = divmod(ij, halfNsqrt)
@@ -116,10 +134,19 @@ if dimer:
         uy[2*ij]=(j+0.5)*L/halfNsqrt-L/2
         ux[2*ij+1]=(i+0.5)*L/halfNsqrt-L/2 +d/2
         uy[2*ij+1]=(j+0.5)*L/halfNsqrt-L/2
-    pairs = []
+    
 
     for k in range(int(float(N/2))):
         pairs.append([2*k,2*k+1])
+        pairs.append([2*k+1,2*k])
+    
+    pairs_x =  np.array([2.0]*N)-np.array([1.0]*N)[:,None]
+    
+    
+    for pair in pairs:
+        pairs_x[pair[0],pair[1]] = 0.0
+        pairs_x[pair[1],pair[0]] = 0.0
+        
 else:
     for ij in range(N):
         i,j = divmod(ij, Nsqrt)
@@ -136,9 +163,11 @@ screen = pygame.display.set_mode([screen_size,screen_size])
 pygame.display.set_caption('Molecules with Lennard-Jones potential. N = '+str(N))
 clock = pygame.time.Clock()
 
-vx[0]=0.1 #initial conditions: one particle moves
-vy[0]=0.2
-ax,ay=forces(ux,uy,N)
+vx[0]=14.0 #initial conditions: one particle moves
+vy[0]=14.0
+vx[1]=14.0
+vy[1]=14.0
+ax,ay=forces(ux,uy,N, pairs_x, dimer)
 
 
 Temp_count= 0.0
@@ -155,16 +184,19 @@ while done == False:
         if dimer:
             s_ux=ux+vx*dt+ax*dt*dt/2.
             s_uy=uy+vy*dt+ay*dt*dt/2.
-            ux, uy =constrain_update(s_ux, s_uy, ux,uy,pairs,N,d, L)
+            ux, uy = constrain_update(s_ux, s_uy, ux, uy, pairs, N, d, L)
         else:
             ux=ux+vx*dt+ax*dt*dt/2.
             uy=uy+vy*dt+ay*dt*dt/2.
         vx=vx+ax*dt/2.
         vy=vy+ay*dt/2.
-        ax,ay=forces(ux,uy,N)
+        ax,ay=forces(ux,uy,N, pairs_x, dimer)
         vx=vx+ax*dt/2.
         vy=vy+ay*dt/2.
-        if t > 20: dimer = False 
+        if dimer and t > 20: 
+            dimer = False
+            scaling = False 
+            print 'Constraint broken'
         if scaling and int(t*1000)%7==0 and t > 2: 
             vx, vy = scaling_factor(vx, vy, N)
             if t > 200:
@@ -172,21 +204,21 @@ while done == False:
                 print 'scaling stopped'
     
         if not scaling and auto_correlate and int(t*1000)%7==0:
-                rx=ux-ux[:,None]
-                ry=uy-uy[:,None]
-                rx = rx - L*np.round(rx/L,0)
-                ry = ry - L*np.round(ry/L,0)
-                distances = np.sqrt(rx**2+ry**2)
-                for r_group in distances:
-                    for r in r_group:
-                        if r <= max_r and r > 0.0:
-                            r = float(scalar)*r 
-                            try:
-                                gr_bins[int(round(r, 0))] += 1.0
-                            except IndexError:
-                                while len(gr_bins) <= int(round(r, 0)):
-                                    gr_bins.append(0.0)
-                                    gr_bins[-1] += 1.0
+            rx=ux-ux[:,None]
+            ry=uy-uy[:,None]
+            rx = rx - L*np.round(rx/L,0)
+            ry = ry - L*np.round(ry/L,0)
+            distances = np.sqrt(rx**2+ry**2)
+            for r_group in distances:
+                for r in r_group:
+                    if r <= max_r and r > 0.0:
+                        r = float(scalar)*r 
+                        try:
+                            gr_bins[int(round(r, 0))] += 1.0
+                        except IndexError:
+                            while len(gr_bins) <= int(round(r, 0)):
+                                gr_bins.append(0.0)
+                                gr_bins[-1] += 1.0
                 
     
         #if t>1 and t<20:
@@ -222,6 +254,7 @@ while done == False:
         for i in range(N):
             #if t > 1.0: VelocityDistribution.sample(sqrt(vx[i]**2 + vy[i]**2))
             pygame.draw.circle(screen, black, (int((Lscreen*(ux[i]+L/2)/L)),int((Lscreen*(uy[i]+L/2)/L))), int(circle_size), 0)
+            
     animate()
 
 for i in range(len(gr_bins)):
